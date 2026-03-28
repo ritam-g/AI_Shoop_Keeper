@@ -5,9 +5,11 @@ const GameChat = ({ sessionId, onGameEnd }) => {
   const [messages, setMessages] = useState([]);
   const [userOffer, setUserOffer] = useState('');
   const [loading, setLoading] = useState(false);
-  const [gameStatus, setGameStatus] = useState('ongoing'); // 'ongoing', 'won', 'lost'
+  const [gameStatus, setGameStatus] = useState('ongoing'); // 'ongoing', 'won', 'lost', 'score-entry'
   const [currentRound, setCurrentRound] = useState(0);
   const [maxRounds, setMaxRounds] = useState(7);
+  const [finalPrice, setFinalPrice] = useState(null);
+  const [username, setUsername] = useState('');
   const messagesEndRef = useRef(null);
 
   const scrollToBottom = () => {
@@ -36,8 +38,8 @@ const GameChat = ({ sessionId, onGameEnd }) => {
         userOffer: offerNum
       });
 
-      const aiMessage = { 
-        type: 'ai', 
+      const aiMessage = {
+        type: 'ai',
         text: response.data.aiResponse,
         counterPrice: response.data.counterPrice,
         accept: response.data.accept,
@@ -49,8 +51,8 @@ const GameChat = ({ sessionId, onGameEnd }) => {
       setMaxRounds(response.data.maxRounds);
 
       if (response.data.isDealClosed) {
-        setGameStatus(response.data.accept ? 'won' : 'lost');
-        onGameEnd(response.data.finalPrice, response.data.accept);
+        setFinalPrice(response.data.finalPrice);
+        setGameStatus(response.data.accept ? 'won' : 'score-entry' : 'lost');
       }
     } catch (error) {
       console.error(error);
@@ -60,16 +62,56 @@ const GameChat = ({ sessionId, onGameEnd }) => {
     }
   };
 
-  if (gameStatus !== 'ongoing') {
+  if (gameStatus === 'score-entry') {
     return (
-      <div className="text-center p-8">
-        <div className="text-2xl font-bold mb-4">
-          {gameStatus === 'won' ? '🎉 Deal Closed!' : 'Game Over'}
+      <div className="text-center p-12 space-y-6">
+        <div className="text-3xl font-bold text-green-600 mb-4">🎉 Deal Closed!</div>
+        <div className="text-xl font-bold text-gray-800 mb-4">Final Price: ${finalPrice.toLocaleString()}</div>
+        <div>
+          <input
+            type="text"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            placeholder="Enter your name"
+            className="w-full px-4 py-3 border border-gray-300 rounded-xl text-center font-semibold text-lg focus:ring-2 focus:ring-primary"
+            maxLength="20"
+          />
         </div>
-        <p className="text-lg text-gray-600 mb-8">Final Price: ${finalPrice?.toLocaleString()}</p>
-        <button 
+        <div className="space-x-4">
+          <button
+            onClick={async () => {
+              if (username.trim()) {
+                try {
+                  await axios.post('/api/leaderboard/save-score', {
+                    username: username.trim(),
+                    finalPrice,
+                    rounds: currentRound
+                  });
+                  alert('Score saved! Check leaderboard.');
+                } catch (error) {
+                  console.error('Save score error', error);
+                }
+              }
+              window.location.reload();
+            }}
+            disabled={!username.trim()}
+            className="bg-green-500 hover:bg-green-600 disabled:opacity-50 text-white px-8 py-3 rounded-xl font-semibold"
+          >
+            Save Score & Play Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (gameStatus === 'lost') {
+    return (
+      <div className="text-center p-12 space-y-6">
+        <div className="text-3xl font-bold text-red-600 mb-4">Game Over</div>
+        <div className="text-xl text-gray-800">No deal made!</div>
+        <button
           onClick={() => window.location.reload()}
-          className="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-xl font-semibold"
+          className="bg-primary hover:bg-blue-700 text-white px-8 py-3 rounded-xl font-semibold"
         >
           Play Again
         </button>
@@ -91,11 +133,10 @@ const GameChat = ({ sessionId, onGameEnd }) => {
         ) : (
           messages.map((msg, idx) => (
             <div key={idx} className={`mb-4 flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}>
-              <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-2xl ${
-                msg.type === 'user' 
-                  ? 'bg-primary text-white' 
-                  : 'bg-white shadow border border-gray-200'
-              }`}>
+              <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-2xl ${msg.type === 'user'
+                ? 'bg-primary text-white'
+                : 'bg-white shadow border border-gray-200'
+                }`}>
                 <p>{msg.text}</p>
                 {msg.counterPrice && (
                   <p className="text-sm mt-1 opacity-90 font-semibold">

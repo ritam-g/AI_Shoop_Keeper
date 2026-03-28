@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
+import axios from 'axios';
 import GameChat from './components/GameChat';
+import Leaderboard from './components/Leaderboard';
 
 function App() {
     const [gameActive, setGameActive] = useState(false);
@@ -54,18 +56,21 @@ function App() {
                 <h1 className="text-4xl font-bold text-center text-gray-800 mb-8">
                     🤝 AI Negotiation Game
                 </h1>
-                <div className="bg-white rounded-2xl shadow-xl p-8">
-                    <p className="text-lg text-gray-600 text-center mb-8">
-                        Negotiate with AI seller to get the best deal on Premium Wireless Headphones (Retail: $1000)!
-                    </p>
-                    <div className="text-center">
+                <div className="grid md:grid-cols-2 gap-8">
+                    <div>
+                        <h3 className="text-xl font-bold text-gray-800 mb-4">Play Game</h3>
+                        <p className="text-gray-600 mb-6">Negotiate with AI seller to get the best deal!</p>
                         <button
                             onClick={startGame}
                             disabled={loading}
-                            className="bg-gradient-to-r from-primary to-secondary text-white px-8 py-4 rounded-xl text-lg font-semibold hover:shadow-lg transform hover:-translate-y-1 transition-all duration-200 disabled:opacity-50"
+                            className="w-full bg-gradient-to-r from-primary to-secondary text-white px-6 py-4 rounded-xl text-lg font-semibold hover:shadow-lg transform hover:-translate-y-1 transition-all duration-200 disabled:opacity-50"
                         >
                             {loading ? 'Starting...' : '🎮 Start Negotiation'}
                         </button>
+                    </div>
+                    <div>
+                        <h3 className="text-xl font-bold text-gray-800 mb-4">Leaderboard</h3>
+                        <Leaderboard />
                     </div>
                 </div>
             </div>
