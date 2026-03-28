@@ -8,9 +8,9 @@
 - [x] STEP 5: Negotiation Logic (CORE)
 - [x] STEP 6: Gemini Integration
 - [x] STEP 7: Controllers
+- [x] STEP 8: Routes
 
 ## Pending Steps
-- [ ] STEP 8: Routes
 - [ ] STEP 9: Frontend Setup
 - [ ] STEP 10: Chat UI
 - [ ] STEP 11: Connect Frontend to Backend

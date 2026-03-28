@@ -15,6 +15,10 @@ mongoose.connect(process.env.MONGODB_URI)
     .then(() => console.log('MongoDB connected successfully'))
     .catch(err => console.log('MongoDB connection error:', err));
 
+// Routes
+app.use('/api/sessions', require('./routes/sessionRoutes'));
+app.use('/api/leaderboard', require('./routes/leaderboardRoutes'));
+
 // Basic route
 app.get('/', (req, res) => {
     res.json({ message: 'AI Negotiation Game Backend is running!' });
