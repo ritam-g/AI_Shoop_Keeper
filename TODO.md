@@ -2,9 +2,9 @@
 
 ## Completed Steps
 - [x] STEP 1: Initialize Project (npm init)
+- [x] STEP 2: Setup Backend Server
 
 ## Pending Steps
-- [ ] STEP 2: Setup Backend Server
 - [ ] STEP 3: Connect MongoDB
 - [ ] STEP 4: Create Models
 - [ ] STEP 5: Negotiation Logic (CORE)
