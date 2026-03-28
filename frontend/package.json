@@ -1,0 +1,13 @@
+{
+    "name": "ai-negotiation-frontend",
+    "version": "1.0.0",
+    "description": "Frontend for AI Negotiation Game",
+    "main": "index.js",
+    "scripts": {
+        "start": "react-scripts start",
+        "build": "react-scripts build"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC"
+}
