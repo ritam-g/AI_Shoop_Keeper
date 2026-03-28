@@ -9,9 +9,9 @@
 - [x] STEP 6: Gemini Integration
 - [x] STEP 7: Controllers
 - [x] STEP 8: Routes
+- [x] STEP 9: Frontend Setup
 
 ## Pending Steps
-- [ ] STEP 9: Frontend Setup
 - [ ] STEP 10: Chat UI
 - [ ] STEP 11: Connect Frontend to Backend
 - [ ] STEP 12: Leaderboard UI
