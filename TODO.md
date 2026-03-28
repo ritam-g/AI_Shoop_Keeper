@@ -7,9 +7,9 @@
 - [x] STEP 4: Create Models
 - [x] STEP 5: Negotiation Logic (CORE)
 - [x] STEP 6: Gemini Integration
+- [x] STEP 7: Controllers
 
 ## Pending Steps
-- [ ] STEP 7: Controllers
 - [ ] STEP 8: Routes
 - [ ] STEP 9: Frontend Setup
 - [ ] STEP 10: Chat UI
