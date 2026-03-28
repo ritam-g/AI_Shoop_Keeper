@@ -6,9 +6,9 @@
 - [x] STEP 3: Connect MongoDB
 - [x] STEP 4: Create Models
 - [x] STEP 5: Negotiation Logic (CORE)
+- [x] STEP 6: Gemini Integration
 
 ## Pending Steps
-- [ ] STEP 6: Gemini Integration
 - [ ] STEP 7: Controllers
 - [ ] STEP 8: Routes
 - [ ] STEP 9: Frontend Setup
