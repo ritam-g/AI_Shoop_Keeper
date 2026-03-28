@@ -10,9 +10,9 @@
 - [x] STEP 7: Controllers
 - [x] STEP 8: Routes
 - [x] STEP 9: Frontend Setup
+- [x] STEP 10: Chat UI
 
 ## Pending Steps
-- [ ] STEP 10: Chat UI
 - [ ] STEP 11: Connect Frontend to Backend
 - [ ] STEP 12: Leaderboard UI
-- [ ] STEP 13: Final Polish
+- [x] STEP 13: Final Polish
