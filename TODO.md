@@ -12,7 +12,7 @@
 - [x] STEP 9: Frontend Setup
 - [x] STEP 10: Chat UI
 - [x] STEP 11: Connect Frontend to Backend
+- [x] STEP 12: Leaderboard UI
 
 ## Pending Steps
-- [ ] STEP 12: Leaderboard UI
-- [ ] STEP 13: Final Polish
+- [x] STEP 13: Final Polish

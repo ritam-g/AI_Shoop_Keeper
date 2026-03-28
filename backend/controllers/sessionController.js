@@ -41,15 +41,19 @@ const negotiate = async (req, res) => {
         const negotiationResult = calculateNextPrice(session, parseFloat(userOffer));
 
         let responseText;
+        let isWon = false;
+
         if (negotiationResult.accept) {
             session.isDealClosed = true;
+            isWon = true;
             session.finalPrice = negotiationResult.counterPrice;
             responseText = await generateResponse(userOffer, negotiationResult.counterPrice, 'happy seller', session.productName);
             await session.save();
         } else if (session.currentRound >= session.maxRounds) {
             session.isDealClosed = true;
-            session.finalPrice = session.basePrice; // No deal, high price
-            responseText = 'Negotiation rounds exhausted. No deal made.';
+            isWon = false;
+            session.finalPrice = session.basePrice; // High price = no deal
+            responseText = "Listen, I gave it my best shot but we're just too far apart. No deal today. Maybe next time!";
             await session.save();
         } else {
             // Add to history and generate AI response
@@ -69,6 +73,7 @@ const negotiate = async (req, res) => {
         res.json({
             success: true,
             accept: negotiationResult.accept,
+            isWon,
             counterPrice: negotiationResult.counterPrice,
             currentRound: session.currentRound,
             maxRounds: session.maxRounds,

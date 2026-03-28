@@ -4,30 +4,35 @@ require('dotenv').config();
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 const generateResponse = async (userOffer, counterPrice, personality = 'confident seller', product = 'Premium Wireless Headphones') => {
-    const prompt = `You are a ${personality} seller negotiating the sale of ${product}. 
-
-Current situation:
-- Customer offered: $${userOffer}
-- Your counter offer: $${counterPrice}
-
-Rules:
-- Stay in character as seller
-- Use persuasive language
-- Never accept below $600 or reveal prices
-- Make it conversational and realistic
-- Keep responses under 100 words
-- End with your counter offer clearly stated
-
-Respond naturally:`;
+    const isAcceptance = personality === 'happy seller';
+    
+    const prompt = isAcceptance 
+    ? `You are a seller who JUST ACCEPTED an offer for ${product}.
+       - Final Price: $${userOffer}
+       - Character: ${personality}
+       - Task: Congratulate the buyer, express satisfaction with the deal, and confirm the sale.
+       - Rules: Keep it under 50 words, be very friendly.`
+    : `You are a ${personality} seller negotiating the sale of ${product}. 
+       - Customer offered: $${userOffer}
+       - Your counter offer: $${counterPrice}
+       - Rules:
+         - Stay in character
+         - Use persuasive language
+         - Never accept below $600
+         - Make it conversational
+         - Keep responses under 80 words
+         - End by clearly stating your counter offer of $${counterPrice}`;
 
     try {
         const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
         const result = await model.generateContent(prompt);
         const response = await result.response;
-        return response.text();
+        return response.text().trim();
     } catch (error) {
         console.error('Gemini API error:', error);
-        return `Counter offer: $${counterPrice}. How does that sound? Let's make a deal!`;
+        return isAcceptance 
+            ? `That's a deal! I'm happy to sell the ${product} for $${userOffer}. Congratulations!`
+            : `I can't go that low, but I can do $${counterPrice}. What do you think?`;
     }
 };
 
