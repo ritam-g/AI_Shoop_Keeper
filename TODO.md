@@ -4,9 +4,9 @@
 - [x] STEP 1: Initialize Project (npm init)
 - [x] STEP 2: Setup Backend Server
 - [x] STEP 3: Connect MongoDB
+- [x] STEP 4: Create Models
 
 ## Pending Steps
-- [ ] STEP 4: Create Models
 - [ ] STEP 5: Negotiation Logic (CORE)
 - [ ] STEP 6: Gemini Integration
 - [ ] STEP 7: Controllers
