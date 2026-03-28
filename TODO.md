@@ -15,4 +15,4 @@
 ## Pending Steps
 - [ ] STEP 11: Connect Frontend to Backend
 - [ ] STEP 12: Leaderboard UI
-- [x] STEP 13: Final Polish
+- [ ] STEP 13: Final Polish
