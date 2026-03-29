@@ -3,23 +3,23 @@ const mongoose = require('mongoose');
 const sessionSchema = new mongoose.Schema({
     productName: {
         type: String,
-        required: true,
-        default: 'Premium Wireless Headphones'
+        required: true
+    },
+    productImage: {
+        type: String,
+        required: true
     },
     basePrice: {
         type: Number,
-        required: true,
-        default: 1000
+        required: true
     },
     minPrice: {
         type: Number,
-        required: true,
-        default: 600
+        required: true
     },
     targetPrice: {
         type: Number,
-        required: true,
-        default: 850
+        required: true
     },
     currentRound: {
         type: Number,

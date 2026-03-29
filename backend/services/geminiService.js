@@ -1,9 +1,9 @@
-const { GoogleGenerativeAI } = require('@google/generative-ai');
+﻿const { GoogleGenerativeAI } = require('@google/generative-ai');
 require('dotenv').config();
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-const generateResponse = async (userOffer, counterPrice, personality = 'confident seller', product = 'Premium Wireless Headphones') => {
+const generateResponse = async (userOffer, counterPrice, personality, product = 'this product', minPrice = 600) => {
     const isAcceptance = personality === 'happy seller';
     
     const prompt = isAcceptance 
@@ -18,7 +18,7 @@ const generateResponse = async (userOffer, counterPrice, personality = 'confiden
        - Rules:
          - Stay in character
          - Use persuasive language
-         - Never accept below $600
+         - Never accept below $${minPrice}
          - Make it conversational
          - Keep responses under 80 words
          - End by clearly stating your counter offer of $${counterPrice}`;

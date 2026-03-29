@@ -1,6 +1,9 @@
 const express = require('express');
 const router = express.Router();
-const { startSession, negotiate } = require('../controllers/sessionController');
+const { startSession, negotiate, getProducts } = require('../controllers/sessionController');
+
+// GET /api/sessions/products
+router.get('/products', getProducts);
 
 // POST /api/sessions/start-session
 router.post('/start-session', startSession);

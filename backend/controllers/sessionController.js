@@ -1,24 +1,48 @@
 const Session = require('../models/Session');
 const { calculateNextPrice } = require('../utils/negotiationLogic');
 const { generateResponse } = require('../services/geminiService');
+const products = require('../config/products');
 
 // Start new session
 const startSession = async (req, res) => {
     try {
+        const { productName } = req.body;
+        
+        if (!productName) {
+            return res.status(400).json({ success: false, error: 'Product name is required' });
+        }
+
+        const product = products.find(p => p.name === productName);
+        
+        if (!product) {
+            return res.status(404).json({ success: false, error: 'Product not found' });
+        }
+
         const session = new Session({
-            productName: 'Premium Wireless Headphones'
+            productName: product.name,
+            productImage: product.image,
+            basePrice: product.basePrice,
+            minPrice: product.minPrice,
+            targetPrice: product.targetPrice
         });
+
         await session.save();
         res.json({
             success: true,
             sessionId: session._id,
             productName: session.productName,
+            productImage: session.productImage,
             basePrice: session.basePrice,
-            message: 'Negotiation session started! Make your first offer.'
+            message: `Negotiation for ${session.productName} started! Make your first offer.`
         });
     } catch (error) {
         res.status(500).json({ success: false, error: error.message });
     }
+};
+
+// Get all products
+const getProducts = (req, res) => {
+    res.json({ success: true, products });
 };
 
 // Negotiate
@@ -47,7 +71,7 @@ const negotiate = async (req, res) => {
             session.isDealClosed = true;
             isWon = true;
             session.finalPrice = negotiationResult.counterPrice;
-            responseText = await generateResponse(userOffer, negotiationResult.counterPrice, 'happy seller', session.productName);
+            responseText = await generateResponse(userOffer, negotiationResult.counterPrice, 'happy seller', session.productName, session.minPrice);
             await session.save();
         } else if (session.currentRound >= session.maxRounds) {
             session.isDealClosed = true;
@@ -64,7 +88,7 @@ const negotiate = async (req, res) => {
                 round: session.currentRound
             });
 
-            responseText = await generateResponse(userOffer, negotiationResult.counterPrice, 'confident seller', session.productName);
+            responseText = await generateResponse(userOffer, negotiationResult.counterPrice, 'confident seller', session.productName, session.minPrice);
             session.chatHistory[session.chatHistory.length - 1].aiResponse = responseText;
 
             await session.save();
@@ -86,4 +110,4 @@ const negotiate = async (req, res) => {
     }
 };
 
-module.exports = { startSession, negotiate };
+module.exports = { startSession, negotiate, getProducts };
