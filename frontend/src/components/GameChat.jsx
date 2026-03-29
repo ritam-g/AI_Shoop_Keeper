@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 /**
  * GameChat Component
@@ -12,6 +13,7 @@ import axios from 'axios';
  * - gameResultStatus: Determines if the outcome was a WIN, LOSS, or INVALID.
  */
 const GameChat = ({ sessionId, product }) => {
+  const navigate = useNavigate()
   const [messages, setMessages] = useState([]);
   const [userOffer, setUserOffer] = useState('');
   const [loading, setLoading] = useState(false);
@@ -49,10 +51,10 @@ const GameChat = ({ sessionId, product }) => {
     if (isNaN(offerNum) || offerNum <= 0) return;
 
     setLoading(true);
-    const userMessage = { 
-      type: 'user', 
-      text: `I'm offering you $${offerNum.toLocaleString()}.`, 
-      offer: offerNum 
+    const userMessage = {
+      type: 'user',
+      text: `I'm offering you $${offerNum.toLocaleString()}.`,
+      offer: offerNum
     };
     setMessages(prev => [...prev, userMessage]);
     setUserOffer('');
@@ -98,59 +100,59 @@ const GameChat = ({ sessionId, product }) => {
   if (gameStatus === 'ended') {
     const isInvalid = gameResultStatus === 'INVALID';
     const isLoss = gameResultStatus === 'LOSS';
-    
+
     return (
       <div className="bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-100 animate-in zoom-in duration-500 max-w-2xl mx-auto">
         <div className={`p-10 text-center ${isWon ? 'bg-emerald-50' : isLoss ? 'bg-slate-50' : 'bg-rose-50'}`}>
           <div className="mb-6 relative mx-auto h-32 w-32">
             <img src={product?.image} alt={product?.name} className="h-full w-full object-cover rounded-2xl shadow-lg ring-4 ring-white" />
             <div className="absolute -bottom-2 -right-2 h-10 w-10 bg-white rounded-full flex items-center justify-center shadow-lg text-xl">
-               {isWon ? '🎉' : isLoss ? '🤝' : '🚫'}
+              {isWon ? '🎉' : isLoss ? '🤝' : '🚫'}
             </div>
           </div>
           <h2 className="text-3xl font-black mb-2">
             {isWon ? <span className="gradient-text-primary">Deal Accepted!</span> : isLoss ? 'Negotiation Ended' : <span className="gradient-text-rose">Negotiation Invalid!</span>}
           </h2>
           <p className="text-slate-500 mb-8 font-medium">
-            {isInvalid 
-               ? "Negotiation failed. You need more interaction to count as a deal (min 1 round)."
-               : isWon 
-                 ? <span>You successfully negotiated a price of <span className="gradient-text-secondary font-black">${finalPrice?.toLocaleString()}</span> for <span className="font-bold text-slate-900">{product?.name}</span>!</span>
-                 : `The negotiation for ${product?.name} concluded without a firm deal.`}
+            {isInvalid
+              ? "Negotiation failed. You need more interaction to count as a deal (min 1 round)."
+              : isWon
+                ? <span>You successfully negotiated a price of <span className="gradient-text-secondary font-black">${finalPrice?.toLocaleString()}</span> for <span className="font-bold text-slate-900">{product?.name}</span>!</span>
+                : `The negotiation for ${product?.name} concluded without a firm deal.`}
           </p>
-          
+
           <div className="max-w-xs mx-auto space-y-4">
             {!isInvalid && (
               <div className="space-y-2">
-                  <label className="text-xs font-bold uppercase tracking-tight text-slate-400 block text-left ml-1">Your Name</label>
-                  <input
-                      type="text"
-                      value={username}
-                      onChange={(e) => setUsername(e.target.value)}
-                      placeholder="Enter moniker..."
-                      className="w-full px-5 py-4 bg-white border border-slate-200 rounded-2xl text-lg font-bold focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all placeholder:text-slate-300"
-                      maxLength="20"
-                  />
+                <label className="text-xs font-bold uppercase tracking-tight text-slate-400 block text-left ml-1">Your Name</label>
+                <input
+                  type="text"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  placeholder="Enter moniker..."
+                  className="w-full px-5 py-4 bg-white border border-slate-200 rounded-2xl text-lg font-bold focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all placeholder:text-slate-300"
+                  maxLength="20"
+                />
               </div>
             )}
             <button
-                onClick={async () => {
-                  if (username.trim() && !isInvalid) {
-                    try {
-                      await axios.post('/api/leaderboard/save-score', {
-                        username: username.trim(),
-                        sessionId
-                      });
-                    } catch (error) {
-                      console.error('Save score error', error);
-                    }
+              onClick={async () => {
+                if (username.trim() && !isInvalid) {
+                  try {
+                    await axios.post('/api/leaderboard/save-score', {
+                      username: username.trim(),
+                      sessionId
+                    });
+                  } catch (error) {
+                    console.error('Save score error', error);
                   }
-                  window.location.reload();
-                }}
-                disabled={!username.trim() && !isInvalid}
-                className="w-full bg-primary text-white py-4 rounded-2xl font-bold hover:bg-black transition-all disabled:opacity-30 shadow-lg shadow-primary/20"
+                }
+                navigate('/')
+              }}
+              disabled={!username.trim() && !isInvalid}
+              className="w-full bg-primary text-white py-4 rounded-2xl font-bold hover:bg-black transition-all disabled:opacity-30 shadow-lg shadow-primary/20"
             >
-                {isWon ? 'Save Score & Finish' : 'Take me Home'}
+              {isWon ? 'Save Score & Finish' : 'Take me Home'}
             </button>
           </div>
         </div>
@@ -170,7 +172,7 @@ const GameChat = ({ sessionId, product }) => {
               Brand New
             </div>
           </div>
-          
+
           <div className="space-y-1">
             <h3 className="text-xl font-black text-slate-900 leading-tight">{product?.name}</h3>
             <div className="flex items-center gap-2">
@@ -189,8 +191,8 @@ const GameChat = ({ sessionId, product }) => {
             </div>
             <div className="flex gap-1 h-1.5 w-full">
               {[...Array(maxRounds)].map((_, i) => (
-                <div 
-                  key={i} 
+                <div
+                  key={i}
                   className={`flex-1 rounded-full transition-all duration-500 ${i < currentRound ? 'bg-primary' : 'bg-slate-100'}`}
                 ></div>
               ))}
@@ -199,23 +201,23 @@ const GameChat = ({ sessionId, product }) => {
         </div>
 
         <div className="mt-auto p-6 border-t border-slate-100 hidden md:block">
-           <div className="flex items-center gap-3">
-              <div className="h-8 w-8 rounded-full bg-emerald-500 flex items-center justify-center text-white text-xs">AI</div>
-              <div>
-                <p className="text-xs font-bold text-slate-900">Virtual Seller</p>
-                <div className="flex items-center gap-1">
-                   <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
-                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">Active Agent</p>
-                </div>
+          <div className="flex items-center gap-3">
+            <div className="h-8 w-8 rounded-full bg-emerald-500 flex items-center justify-center text-white text-xs">AI</div>
+            <div>
+              <p className="text-xs font-bold text-slate-900">Virtual Seller</p>
+              <div className="flex items-center gap-1">
+                <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">Active Agent</p>
               </div>
-           </div>
+            </div>
+          </div>
         </div>
       </div>
 
       <div className="flex-1 flex flex-col bg-white overflow-hidden">
         <div className="px-6 py-4 bg-white border-b border-slate-50 flex items-center justify-between md:hidden uppercase tracking-widest text-[10px] font-black text-slate-400">
-           <span>Negotiation Stage</span>
-           <span className="text-primary">Round {currentRound}</span>
+          <span>Negotiation Stage</span>
+          <span className="text-primary">Round {currentRound}</span>
         </div>
 
         <div className="flex-1 p-6 md:p-8 overflow-y-auto bg-slate-50/20 space-y-6 scrollbar-hide">
@@ -244,13 +246,13 @@ const GameChat = ({ sessionId, product }) => {
             ))
           )}
           {loading && (
-              <div className="flex justify-start animate-pulse">
-                  <div className="bg-white px-6 py-4 rounded-3xl rounded-tl-none border border-slate-100 flex gap-1">
-                      <span className="h-1.5 w-1.5 rounded-full bg-slate-300 animate-bounce"></span>
-                      <span className="h-1.5 w-1.5 rounded-full bg-slate-300 animate-bounce [animation-delay:0.2s]"></span>
-                      <span className="h-1.5 w-1.5 rounded-full bg-slate-300 animate-bounce [animation-delay:0.4s]"></span>
-                  </div>
+            <div className="flex justify-start animate-pulse">
+              <div className="bg-white px-6 py-4 rounded-3xl rounded-tl-none border border-slate-100 flex gap-1">
+                <span className="h-1.5 w-1.5 rounded-full bg-slate-300 animate-bounce"></span>
+                <span className="h-1.5 w-1.5 rounded-full bg-slate-300 animate-bounce [animation-delay:0.2s]"></span>
+                <span className="h-1.5 w-1.5 rounded-full bg-slate-300 animate-bounce [animation-delay:0.4s]"></span>
               </div>
+            </div>
           )}
           <div ref={messagesEndRef} />
         </div>
@@ -276,7 +278,7 @@ const GameChat = ({ sessionId, product }) => {
             </button>
           </form>
           <p className="mt-4 text-[10px] text-center font-extrabold text-slate-300 uppercase tracking-[0.3em]">
-              Strictly 7 rounds to close the deal
+            Strictly 7 rounds to close the deal
           </p>
         </div>
       </div>
