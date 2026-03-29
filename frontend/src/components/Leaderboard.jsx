@@ -35,7 +35,7 @@ const Leaderboard = () => {
         <div className="bg-white rounded-3xl shadow-xl shadow-slate-200/50 p-10 border border-slate-100 animate-in slide-in-from-right-8 duration-700">
             <div className="flex items-center justify-between mb-10">
                 <div>
-                    <h2 className="text-3xl font-black text-slate-900 tracking-tight">Leaderboard</h2>
+                    <h2 className="text-3xl font-black gradient-text-primary tracking-tight">Leaderboard</h2>
                     <p className="text-sm text-slate-500 font-medium">Top negotiators of the week</p>
                 </div>
                 <div className="h-12 w-12 bg-amber-50 rounded-2xl flex items-center justify-center text-2xl shadow-inner">
@@ -50,22 +50,22 @@ const Leaderboard = () => {
                         className="group flex items-center justify-between p-5 bg-slate-50/50 rounded-2xl hover:bg-white hover:shadow-xl hover:shadow-slate-200/60 transition-all border border-transparent hover:border-slate-100"
                     >
                         <div className="flex items-center gap-5">
-                            <div className={`h-12 w-12 rounded-xl flex items-center justify-center font-black text-lg ${
-                                index === 0 ? 'bg-amber-100 text-amber-600' : 
-                                index === 1 ? 'bg-slate-200 text-slate-500' :
-                                index === 2 ? 'bg-orange-100 text-orange-600' : 
-                                'bg-white text-slate-400 shadow-sm'
+                            <div className={`h-12 w-12 rounded-xl flex items-center justify-center font-black text-lg shadow-sm border border-slate-100 ${
+                                index === 0 ? 'bg-amber-50 gradient-text-gold border-amber-200' : 
+                                index === 1 ? 'bg-cyan-50 gradient-text-cyan border-cyan-200' :
+                                index === 2 ? 'bg-rose-50 gradient-text-rose border-rose-200' : 
+                                'bg-white text-slate-400'
                             }`}>
                                 {index + 1}
                             </div>
                             <div>
-                                <p className="font-bold text-slate-900 group-hover:text-primary transition-colors">{entry.username}</p>
+                                <p className="font-extrabold text-slate-900 group-hover:gradient-text-secondary transition-all">{entry.username}</p>
                                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{entry.rounds} ROUNDS</p>
                             </div>
                         </div>
                         <div className="text-right">
                             <p className="text-xl font-black text-slate-900">$ {entry.finalPrice?.toLocaleString()}</p>
-                            <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">SCORE: {entry.score}</p>
+                            <p className="text-[10px] font-black gradient-text-primary uppercase tracking-widest">SCORE: {entry.score}</p>
                         </div>
                     </div>
                 ))}

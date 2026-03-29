@@ -33,6 +33,15 @@ const sessionSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
+    status: {
+        type: String,
+        enum: ['WIN', 'LOSS', 'INVALID', 'PENDING'],
+        default: 'PENDING'
+    },
+    aiInteractionCount: {
+        type: Number,
+        default: 0
+    },
     finalPrice: {
         type: Number,
         default: null

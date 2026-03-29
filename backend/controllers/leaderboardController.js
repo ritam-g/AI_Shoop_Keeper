@@ -1,17 +1,29 @@
 const Leaderboard = require('../models/Leaderboard');
+const Session = require('../models/Session');
 
 // Save score
 const saveScore = async (req, res) => {
     try {
-        const { username, finalPrice, rounds } = req.body;
+        const { username, sessionId } = req.body;
 
-        const score = Math.max(0, 1000 - finalPrice); // Lower price = higher score
+        const session = await Session.findById(sessionId);
+        if (!session) {
+            return res.status(404).json({ success: false, error: 'Session not found' });
+        }
+
+        // Only save if session is valid
+        if (session.status === 'INVALID' || !session.isDealClosed) {
+            return res.status(400).json({ success: false, error: 'Invalid or unclosed session. No score saved.' });
+        }
+
+        // score = basePrice - finalPrice
+        const score = Math.max(0, session.basePrice - session.finalPrice);
 
         const newEntry = new Leaderboard({
             username,
-            finalPrice,
+            finalPrice: session.finalPrice,
             score,
-            rounds
+            rounds: session.currentRound
         });
 
         await newEntry.save();

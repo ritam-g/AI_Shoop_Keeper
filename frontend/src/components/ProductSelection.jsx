@@ -55,7 +55,7 @@ const ProductSelection = ({ onSelect, loading }) => {
                     <div className="px-2 space-y-4">
                         <div className="flex justify-between items-start">
                             <div>
-                                <h3 className="text-xl font-black text-slate-900 tracking-tight">{product.name}</h3>
+                                <h3 className="text-xl font-black gradient-text-primary tracking-tight">{product.name}</h3>
                                 <div className="flex items-center gap-1.5 mt-1">
                                     <span className="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
                                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">In Stock</span>
@@ -63,7 +63,7 @@ const ProductSelection = ({ onSelect, loading }) => {
                             </div>
                             <div className="text-right">
                                 <span className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Base Price</span>
-                                <span className="text-lg font-black text-primary">${product.basePrice.toLocaleString()}</span>
+                                <span className="text-lg font-black gradient-text-secondary">${product.basePrice.toLocaleString()}</span>
                             </div>
                         </div>
                         

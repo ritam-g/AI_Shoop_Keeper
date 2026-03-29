@@ -40,7 +40,7 @@ function App() {
                         >
                             <span className="group-hover:-translate-x-1 transition-transform">←</span> Back Home
                         </button>
-                        <h2 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary">
+                        <h2 className="text-xl font-black gradient-text-primary tracking-tight">
                             NEGOTIATION ROOM
                         </h2>
                         <div className="w-[70px]" />
@@ -57,20 +57,20 @@ function App() {
             <div className="container mx-auto px-6 py-16 max-w-6xl">
                 <main className="grid lg:grid-cols-12 gap-16 items-start">
                     <div className="lg:col-span-12 space-y-12 mb-10 text-center flex flex-col items-center">
-                        <div className="inline-flex items-center gap-2 px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-xs font-bold uppercase tracking-wider">
+                        <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-blue-50/50 rounded-full text-xs font-bold uppercase tracking-widest text-[#3b82f6]">
                             <span className="relative flex h-2 w-2">
                                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
                                 <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
                             </span>
-                            Live AI Marketplace
+                            <span className="gradient-text-cyan">Live AI Marketplace</span>
                         </div>
                         
-                        <div className="space-y-4">
-                            <h1 className="text-6xl font-black tracking-tight leading-[1.1]">
-                                Pick a Product. Outsmart the <br/>
-                                <span className="text-primary italic">AI Seller.</span>
+                        <div className="space-y-4 max-w-4xl">
+                            <h1 className="text-5xl md:text-7xl font-black tracking-tight leading-[1.1]">
+                                <span className="gradient-text-secondary">Pick a Product.</span> Outsmart the <br/>
+                                <span className="gradient-text-primary italic">AI Seller.</span>
                             </h1>
-                            <p className="text-xl text-slate-500 max-w-2xl leading-relaxed">
+                            <p className="text-lg md:text-xl text-slate-500 max-w-2xl leading-relaxed mx-auto font-medium">
                                 Select a product you're interested in and step into the negotiation room. 
                                 Can you convince our AI to give you the deal of a lifetime?
                             </p>

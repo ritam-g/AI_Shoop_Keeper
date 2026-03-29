@@ -46,6 +46,13 @@ const getProducts = (req, res) => {
 };
 
 // Negotiate
+/**
+ * Handles the negotiation logic between the user and the AI.
+ * 1. Validates session existence and status.
+ * 2. Increments round count and calculates AI counter-offer.
+ * 3. Evaluates if the deal is accepted, lost, or ongoing.
+ * 4. Enforces validation rules (min 2 rounds) to prevent early game bypass.
+ */
 const negotiate = async (req, res) => {
     try {
         const { sessionId, userOffer } = req.body;
@@ -64,23 +71,51 @@ const negotiate = async (req, res) => {
         // Calculate next price
         const negotiationResult = calculateNextPrice(session, parseFloat(userOffer));
 
-        let responseText;
         let isWon = false;
+        let status = 'INVALID';
 
+        // CASE 1: AI accepts the user's latest offer
         if (negotiationResult.accept) {
             session.isDealClosed = true;
-            isWon = true;
             session.finalPrice = negotiationResult.counterPrice;
+            session.aiInteractionCount += 1;
+            
+            // VALIDATION: Must have at least 2 rounds and 1 AI reply to prevent bypassing the game
+            if (session.currentRound >= 1 && session.aiInteractionCount >= 1) {
+                isWon = true;
+                status = 'WIN';
+            } else {
+                isWon = false;
+                status = 'INVALID';
+            }
+            session.status = status;
+
+            // Generate AI response with a 'happy' personality for acceptance
             responseText = await generateResponse(userOffer, negotiationResult.counterPrice, 'happy seller', session.productName, session.minPrice);
             await session.save();
-        } else if (session.currentRound >= session.maxRounds) {
+        } 
+        // CASE 2: Maximum rounds reached without a deal
+        else if (session.currentRound >= session.maxRounds) {
             session.isDealClosed = true;
-            isWon = false;
-            session.finalPrice = session.basePrice; // High price = no deal
+            session.finalPrice = session.basePrice; // Revert to base price (no deal)
+            session.aiInteractionCount += 1;
+            
+            // VALIDATION: Even if no deal, rounds must have happened for a 'LOSS' instead of 'INVALID'
+            if (session.currentRound >= 2 && session.aiInteractionCount >= 1) {
+                isWon = false;
+                status = 'LOSS';
+            } else {
+                isWon = false;
+                status = 'INVALID';
+            }
+            session.status = status;
+
             responseText = "Listen, I gave it my best shot but we're just too far apart. No deal today. Maybe next time!";
             await session.save();
-        } else {
-            // Add to history and generate AI response
+        } 
+        // CASE 3: Ongoing negotiation (seller gives a counter-offer)
+        else {
+            session.aiInteractionCount += 1;
             session.chatHistory.push({
                 userOffer: parseFloat(userOffer),
                 counterPrice: negotiationResult.counterPrice,
@@ -88,6 +123,7 @@ const negotiate = async (req, res) => {
                 round: session.currentRound
             });
 
+            // Generate AI response with a 'confident' personality for negotiation
             responseText = await generateResponse(userOffer, negotiationResult.counterPrice, 'confident seller', session.productName, session.minPrice);
             session.chatHistory[session.chatHistory.length - 1].aiResponse = responseText;
 
@@ -98,6 +134,7 @@ const negotiate = async (req, res) => {
             success: true,
             accept: negotiationResult.accept,
             isWon,
+            status: session.status,
             counterPrice: negotiationResult.counterPrice,
             currentRound: session.currentRound,
             maxRounds: session.maxRounds,

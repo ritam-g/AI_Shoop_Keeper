@@ -1,6 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 
+/**
+ * GameChat Component
+ * Manages the core negotiation logic and interactive UI.
+ * 
+ * State Management:
+ * - messages: Array of objects representing the chat history (user vs AI).
+ * - gameStatus: Tracks if the negotiation is 'ongoing' or 'ended'.
+ * - currentRound/maxRounds: Tracks progress against the negotiation limit.
+ * - gameResultStatus: Determines if the outcome was a WIN, LOSS, or INVALID.
+ */
 const GameChat = ({ sessionId, product }) => {
   const [messages, setMessages] = useState([]);
   const [userOffer, setUserOffer] = useState('');
@@ -13,6 +23,7 @@ const GameChat = ({ sessionId, product }) => {
   const [username, setUsername] = useState('');
   const messagesEndRef = useRef(null);
 
+  // Auto-scroll to the latest message when the messages array updates
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -21,6 +32,15 @@ const GameChat = ({ sessionId, product }) => {
     scrollToBottom();
   }, [messages]);
 
+  const [gameResultStatus, setGameResultStatus] = useState('PENDING'); // WIN, LOSS, INVALID
+
+  /**
+   * handleSubmit:
+   * 1. Captures user input and updates the UI immediately for responsiveness.
+   * 2. Sends the offer to the backend API.
+   * 3. Processes the AI's response, updating round counts and game status.
+   * 4. Triggers end-of-game state if the deal is closed.
+   */
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!userOffer || loading || gameStatus !== 'ongoing') return;
@@ -43,7 +63,7 @@ const GameChat = ({ sessionId, product }) => {
         userOffer: offerNum
       });
 
-      const { aiResponse, counterPrice, accept, isWon: won, currentRound: round, maxRounds: max, isDealClosed, finalPrice: final } = response.data;
+      const { aiResponse, counterPrice, accept, isWon: won, status: resultStatus, currentRound: round, maxRounds: max, isDealClosed, finalPrice: final } = response.data;
 
       const aiMessage = {
         type: 'ai',
@@ -61,6 +81,7 @@ const GameChat = ({ sessionId, product }) => {
         if (isDealClosed) {
           setFinalPrice(final);
           setIsWon(won);
+          setGameResultStatus(resultStatus);
           setGameStatus('ended');
         }
         setLoading(false);
@@ -73,45 +94,52 @@ const GameChat = ({ sessionId, product }) => {
     }
   };
 
+  // Render the end-of-game summary screen
   if (gameStatus === 'ended') {
+    const isInvalid = gameResultStatus === 'INVALID';
+    const isLoss = gameResultStatus === 'LOSS';
+    
     return (
       <div className="bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-100 animate-in zoom-in duration-500 max-w-2xl mx-auto">
-        <div className={`p-10 text-center ${isWon ? 'bg-emerald-50' : 'bg-slate-50'}`}>
+        <div className={`p-10 text-center ${isWon ? 'bg-emerald-50' : isLoss ? 'bg-slate-50' : 'bg-rose-50'}`}>
           <div className="mb-6 relative mx-auto h-32 w-32">
             <img src={product?.image} alt={product?.name} className="h-full w-full object-cover rounded-2xl shadow-lg ring-4 ring-white" />
             <div className="absolute -bottom-2 -right-2 h-10 w-10 bg-white rounded-full flex items-center justify-center shadow-lg text-xl">
-               {isWon ? '🎉' : '🤝'}
+               {isWon ? '🎉' : isLoss ? '🤝' : '🚫'}
             </div>
           </div>
-          <h2 className="text-3xl font-black text-slate-900 mb-2">
-            {isWon ? 'Deal Accepted!' : 'Negotiation Ended'}
+          <h2 className="text-3xl font-black mb-2">
+            {isWon ? <span className="gradient-text-primary">Deal Accepted!</span> : isLoss ? 'Negotiation Ended' : <span className="gradient-text-rose">Negotiation Invalid!</span>}
           </h2>
           <p className="text-slate-500 mb-8 font-medium">
-            {isWon 
-              ? `You successfully negotiated a price of $${finalPrice?.toLocaleString()} for ${product?.name}!` 
-              : `The negotiation for ${product?.name} has concluded without a deal.`}
+            {isInvalid 
+               ? "Negotiation failed. You need more interaction to count as a deal (min 1 round)."
+               : isWon 
+                 ? <span>You successfully negotiated a price of <span className="gradient-text-secondary font-black">${finalPrice?.toLocaleString()}</span> for <span className="font-bold text-slate-900">{product?.name}</span>!</span>
+                 : `The negotiation for ${product?.name} concluded without a firm deal.`}
           </p>
           
           <div className="max-w-xs mx-auto space-y-4">
-            <div className="space-y-2">
-                <label className="text-xs font-bold uppercase tracking-tight text-slate-400 block text-left ml-1">Your Name</label>
-                <input
-                    type="text"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    placeholder="Enter moniker..."
-                    className="w-full px-5 py-4 bg-white border border-slate-200 rounded-2xl text-lg font-bold focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all placeholder:text-slate-300"
-                    maxLength="20"
-                />
-            </div>
+            {!isInvalid && (
+              <div className="space-y-2">
+                  <label className="text-xs font-bold uppercase tracking-tight text-slate-400 block text-left ml-1">Your Name</label>
+                  <input
+                      type="text"
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value)}
+                      placeholder="Enter moniker..."
+                      className="w-full px-5 py-4 bg-white border border-slate-200 rounded-2xl text-lg font-bold focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all placeholder:text-slate-300"
+                      maxLength="20"
+                  />
+              </div>
+            )}
             <button
                 onClick={async () => {
-                  if (username.trim()) {
+                  if (username.trim() && !isInvalid) {
                     try {
                       await axios.post('/api/leaderboard/save-score', {
                         username: username.trim(),
-                        finalPrice,
-                        rounds: currentRound
+                        sessionId
                       });
                     } catch (error) {
                       console.error('Save score error', error);
@@ -119,7 +147,7 @@ const GameChat = ({ sessionId, product }) => {
                   }
                   window.location.reload();
                 }}
-                disabled={!username.trim()}
+                disabled={!username.trim() && !isInvalid}
                 className="w-full bg-primary text-white py-4 rounded-2xl font-bold hover:bg-black transition-all disabled:opacity-30 shadow-lg shadow-primary/20"
             >
                 {isWon ? 'Save Score & Finish' : 'Take me Home'}
