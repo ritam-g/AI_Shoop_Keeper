@@ -16,6 +16,7 @@ const GameChat = ({ sessionId, product }) => {
   const navigate = useNavigate()
   const [messages, setMessages] = useState([]);
   const [userOffer, setUserOffer] = useState('');
+  const [userMessage, setUserMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const [gameStatus, setGameStatus] = useState('ongoing');
   const [isWon, setIsWon] = useState(false);
@@ -50,29 +51,39 @@ const GameChat = ({ sessionId, product }) => {
     const offerNum = parseFloat(userOffer);
     if (isNaN(offerNum) || offerNum <= 0) return;
 
+    const trimmedMessage = userMessage.trim();
+
     setLoading(true);
-    const userMessage = {
+    // Build display text: show user's own words + price
+    const displayText = trimmedMessage
+      ? `${trimmedMessage} — offering $${offerNum.toLocaleString()}`
+      : `I'm offering you $${offerNum.toLocaleString()}.`;
+
+    const userMsg = {
       type: 'user',
-      text: `I'm offering you $${offerNum.toLocaleString()}.`,
+      text: displayText,
       offer: offerNum
     };
-    setMessages(prev => [...prev, userMessage]);
+    setMessages(prev => [...prev, userMsg]);
     setUserOffer('');
+    setUserMessage('');
 
     try {
       const response = await axios.post('/api/sessions/negotiate', {
         sessionId,
-        userOffer: offerNum
+        userOffer: offerNum,
+        userMessage: trimmedMessage || null
       });
 
-      const { aiResponse, counterPrice, accept, isWon: won, status: resultStatus, currentRound: round, maxRounds: max, isDealClosed, finalPrice: final } = response.data;
+      const { aiResponse, counterPrice, accept, isWon: won, status: resultStatus, currentRound: round, maxRounds: max, isDealClosed, finalPrice: final, isAngryMode } = response.data;
 
       const aiMessage = {
         type: 'ai',
         text: aiResponse,
         counterPrice: counterPrice,
         accept: accept,
-        round: round
+        round: round,
+        angry: isAngryMode
       };
 
       setTimeout(() => {
@@ -202,12 +213,22 @@ const GameChat = ({ sessionId, product }) => {
 
         <div className="mt-auto p-6 border-t border-slate-100 hidden md:block">
           <div className="flex items-center gap-3">
-            <div className="h-8 w-8 rounded-full bg-emerald-500 flex items-center justify-center text-white text-xs">AI</div>
+            <div className={`h-8 w-8 rounded-full flex items-center justify-center text-white text-xs transition-all duration-300 ${
+              messages.some(m => m.angry) ? 'bg-red-500' : 'bg-emerald-500'
+            }`}>
+              {messages.some(m => m.angry) ? '😤' : 'AI'}
+            </div>
             <div>
-              <p className="text-xs font-bold text-slate-900">Virtual Seller</p>
+              <p className="text-xs font-bold text-slate-900">Ray — Virtual Seller</p>
               <div className="flex items-center gap-1">
-                <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">Active Agent</p>
+                <div className={`h-1.5 w-1.5 rounded-full animate-pulse ${
+                  messages.some(m => m.angry) ? 'bg-red-500' : 'bg-emerald-500'
+                }`}></div>
+                <p className={`text-[10px] font-bold uppercase tracking-tight ${
+                  messages.some(m => m.angry) ? 'text-red-400' : 'text-slate-400'
+                }`}>
+                  {messages.some(m => m.angry) ? 'Angry Mode' : 'Active Agent'}
+                </p>
               </div>
             </div>
           </div>
@@ -230,15 +251,30 @@ const GameChat = ({ sessionId, product }) => {
           ) : (
             messages.map((msg, idx) => (
               <div key={idx} className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'} animate-in slide-in-from-bottom-2 duration-300`}>
-                <div className={`max-w-[85%] px-6 py-4 rounded-3xl ${msg.type === 'user'
-                  ? 'bg-primary text-white rounded-tr-none shadow-xl shadow-primary/10'
-                  : 'bg-white text-slate-700 rounded-tl-none border border-slate-100 shadow-sm'
-                  }`}>
+                <div className={`max-w-[85%] px-6 py-4 rounded-3xl ${
+                  msg.type === 'user'
+                    ? 'bg-primary text-white rounded-tr-none shadow-xl shadow-primary/10'
+                    : msg.angry
+                    ? 'bg-red-50 text-red-900 rounded-tl-none border border-red-200 shadow-sm'
+                    : 'bg-white text-slate-700 rounded-tl-none border border-slate-100 shadow-sm'
+                }`}>
+                  {msg.angry && (
+                    <div className="flex items-center gap-1.5 mb-2">
+                      <span className="text-base">😡</span>
+                      <span className="text-[10px] font-black uppercase tracking-widest text-red-400">Ray is angry</span>
+                    </div>
+                  )}
                   <p className="text-[15px] leading-relaxed font-medium">{msg.text}</p>
                   {msg.counterPrice && !msg.accept && (
-                    <div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between">
-                      <span className="text-[10px] font-bold text-slate-400 uppercase">Seller Counter</span>
-                      <span className="text-sm font-black text-primary">${msg.counterPrice.toLocaleString()}</span>
+                    <div className={`mt-3 pt-3 border-t flex items-center justify-between ${
+                      msg.angry ? 'border-red-200' : 'border-slate-100'
+                    }`}>
+                      <span className={`text-[10px] font-bold uppercase ${
+                        msg.angry ? 'text-red-400' : 'text-slate-400'
+                      }`}>Seller Counter</span>
+                      <span className={`text-sm font-black ${
+                        msg.angry ? 'text-red-500' : 'text-primary'
+                      }`}>${msg.counterPrice.toLocaleString()}</span>
                     </div>
                   )}
                 </div>
@@ -257,27 +293,64 @@ const GameChat = ({ sessionId, product }) => {
           <div ref={messagesEndRef} />
         </div>
 
-        <div className="p-6 md:p-8 bg-white border-t border-slate-100">
-          <form onSubmit={handleSubmit} className="relative max-w-2xl mx-auto">
-            <input
-              type="number"
-              value={userOffer}
-              onChange={(e) => setUserOffer(e.target.value)}
-              placeholder={`Enter your offer for ${product?.name}...`}
-              className="w-full pl-10 pr-32 py-5 bg-slate-50 border-none rounded-2xl font-bold text-lg focus:ring-4 focus:ring-primary/10 transition-all outline-none placeholder:text-slate-300 shadow-inner"
-              disabled={loading || gameStatus !== 'ongoing'}
-              min="1"
-            />
-            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">$</div>
-            <button
-              type="submit"
-              disabled={loading || !userOffer || gameStatus !== 'ongoing'}
-              className="absolute right-2 top-2 bottom-2 px-8 bg-primary text-white font-black rounded-xl hover:bg-black transition-all disabled:opacity-20 flex items-center justify-center gap-2 text-sm uppercase tracking-widest"
-            >
-              Offer <span className="text-xl">→</span>
-            </button>
+        <div className="p-4 md:p-6 bg-white border-t border-slate-100">
+          <form onSubmit={handleSubmit} className="max-w-2xl mx-auto space-y-3">
+            {/* Text message row */}
+            <div className="relative">
+              <textarea
+                rows={2}
+                value={userMessage}
+                onChange={(e) => setUserMessage(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSubmit(e);
+                  }
+                }}
+                placeholder="Say something to the seller… (optional)"
+                className="w-full px-5 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-medium text-slate-700 focus:ring-4 focus:ring-primary/10 focus:border-primary/30 transition-all outline-none placeholder:text-slate-300 resize-none leading-relaxed"
+                disabled={loading || gameStatus !== 'ongoing'}
+                maxLength={200}
+              />
+              {userMessage.length > 0 && (
+                <span className="absolute bottom-2 right-3 text-[10px] font-bold text-slate-300">
+                  {userMessage.length}/200
+                </span>
+              )}
+            </div>
+
+            {/* Price + submit row */}
+            <div className="flex gap-2 items-center">
+              <div className="relative flex-1">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-black text-lg select-none">$</span>
+                <input
+                  type="number"
+                  value={userOffer}
+                  onChange={(e) => setUserOffer(e.target.value)}
+                  placeholder="Your price"
+                  className="w-full pl-9 pr-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-black text-xl focus:ring-4 focus:ring-primary/10 focus:border-primary/30 transition-all outline-none placeholder:text-slate-300 placeholder:font-medium placeholder:text-base"
+                  disabled={loading || gameStatus !== 'ongoing'}
+                  min="1"
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={loading || !userOffer || gameStatus !== 'ongoing'}
+                className="shrink-0 px-8 py-4 bg-primary text-white font-black rounded-2xl hover:bg-black transition-all disabled:opacity-20 flex items-center gap-2 text-sm uppercase tracking-widest shadow-lg shadow-primary/20"
+              >
+                {loading ? (
+                  <span className="inline-flex gap-1">
+                    <span className="h-1.5 w-1.5 rounded-full bg-white/60 animate-bounce"></span>
+                    <span className="h-1.5 w-1.5 rounded-full bg-white/60 animate-bounce [animation-delay:0.15s]"></span>
+                    <span className="h-1.5 w-1.5 rounded-full bg-white/60 animate-bounce [animation-delay:0.3s]"></span>
+                  </span>
+                ) : (
+                  <><span>Offer</span><span className="text-xl">→</span></>
+                )}
+              </button>
+            </div>
           </form>
-          <p className="mt-4 text-[10px] text-center font-extrabold text-slate-300 uppercase tracking-[0.3em]">
+          <p className="mt-3 text-[10px] text-center font-extrabold text-slate-300 uppercase tracking-[0.3em]">
             Strictly 7 rounds to close the deal
           </p>
         </div>

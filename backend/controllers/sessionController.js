@@ -1,6 +1,7 @@
 const Session = require('../models/Session');
 const { calculateNextPrice } = require('../utils/negotiationLogic');
 const { generateResponse } = require('../services/geminiService');
+const { detectBadWords } = require('../utils/badWordFilter');
 const products = require('../config/products');
 
 // Start new session
@@ -55,7 +56,7 @@ const getProducts = (req, res) => {
  */
 const negotiate = async (req, res) => {
     try {
-        const { sessionId, userOffer } = req.body;
+        const { sessionId, userOffer, userMessage } = req.body;
 
         const session = await Session.findById(sessionId);
         if (!session) {
@@ -68,8 +69,21 @@ const negotiate = async (req, res) => {
 
         session.currentRound += 1;
 
+        // Detect bad words — switch to angry mode if found (works in any language via AI)
+        const { isBad } = await detectBadWords(userMessage);
+        let personality = isBad ? 'angry seller' : 'confident seller';
+
         // Calculate next price
-        const negotiationResult = calculateNextPrice(session, parseFloat(userOffer));
+        let negotiationResult = calculateNextPrice(session, parseFloat(userOffer));
+
+        // If user was rude, bump the counter price up by 10% as punishment (capped at basePrice)
+        if (isBad && !negotiationResult.accept) {
+            const penalty = Math.round(negotiationResult.counterPrice * 1.10);
+            negotiationResult = {
+                ...negotiationResult,
+                counterPrice: Math.min(penalty, session.basePrice)
+            };
+        }
 
         let isWon = false;
         let status = 'INVALID';
@@ -90,8 +104,8 @@ const negotiate = async (req, res) => {
             }
             session.status = status;
 
-            // Generate AI response with a 'happy' personality for acceptance
-            responseText = await generateResponse(userOffer, negotiationResult.counterPrice, 'happy seller', session.productName, session.minPrice);
+            // Generate AI response with a 'happy' personality for acceptance (anger ignored on deal close)
+            responseText = await generateResponse(userOffer, negotiationResult.counterPrice, 'happy seller', session.productName, session.minPrice, userMessage);
             await session.save();
         } 
         // CASE 2: Maximum rounds reached without a deal
@@ -123,8 +137,8 @@ const negotiate = async (req, res) => {
                 round: session.currentRound
             });
 
-            // Generate AI response with a 'confident' personality for negotiation
-            responseText = await generateResponse(userOffer, negotiationResult.counterPrice, 'confident seller', session.productName, session.minPrice);
+            // Generate AI response — use angry mode if bad words were detected
+            responseText = await generateResponse(userOffer, negotiationResult.counterPrice, personality, session.productName, session.minPrice, userMessage);
             session.chatHistory[session.chatHistory.length - 1].aiResponse = responseText;
 
             await session.save();
@@ -140,7 +154,8 @@ const negotiate = async (req, res) => {
             maxRounds: session.maxRounds,
             aiResponse: responseText,
             isDealClosed: session.isDealClosed,
-            finalPrice: session.finalPrice
+            finalPrice: session.finalPrice,
+            isAngryMode: isBad
         });
     } catch (error) {
         res.status(500).json({ success: false, error: error.message });
